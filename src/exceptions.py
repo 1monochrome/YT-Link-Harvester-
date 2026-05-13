@@ -1,14 +1,10 @@
-class YoutubeHarvesterError(Exception):
+class ChannelParseError(Exception):
     pass
 
 
-class DownloadError(YoutubeHarvesterError):
+class FeedFetchError(Exception):
     pass
 
 
-class ParseError(YoutubeHarvesterError):
-    pass
-
-
-class WriterError(YoutubeHarvesterError):
+class OutputWriteError(Exception):
     pass
