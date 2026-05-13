@@ -1,10 +1,14 @@
-class YoutubeFetcherError(Exception):
-    """Base application exception."""
+class YoutubeHarvesterError(Exception):
+    pass
 
 
-class InvalidChannelURLError(YoutubeFetcherError):
-    """Raised when channel URL is invalid."""
+class DownloadError(YoutubeHarvesterError):
+    pass
 
 
-class FeedFetchError(YoutubeFetcherError):
-    """Raised when RSS feed fetch fails."""
+class ParseError(YoutubeHarvesterError):
+    pass
+
+
+class WriterError(YoutubeHarvesterError):
+    pass

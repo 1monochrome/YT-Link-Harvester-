@@ -1,18 +1,23 @@
-import logging
+import os
 
-from src.config import OUTPUT_DIR, OUTPUT_FILE
+from src.exceptions import WriterError
+from src.utils import ensure_output_dir
 
-logger = logging.getLogger(__name__)
 
-
-def write_videos(videos):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
-        for index, video in enumerate(videos, start=1):
-            file.write(
-                f"{index}. {video.title}\n"
-                f"Video ID: {video.video_id}\n\n"
-            )
-
-    logger.info("Output written to %s", OUTPUT_FILE)
+def write_videos(videos, output_file: str):
+    try:
+        ensure_output_dir(os.path.dirname(output_file))
+        with open(output_file, "w", encoding="utf-8") as f:
+            for idx, video in enumerate(videos, start=1):
+                f.write(f"{idx}. {video.title}\n")
+                f.write(f"   Video ID: {video.video_id}\n")
+                f.write(f"   Page URL: {video.webpage_url}\n")
+                if video.direct_url:
+                    f.write(f"   Direct URL: {video.direct_url}\n")
+                if video.uploader:
+                    f.write(f"   Uploader: {video.uploader}\n")
+                if video.duration:
+                    f.write(f"   Duration: {video.duration} sec\n")
+                f.write("\n")
+    except Exception as exc:
+        raise WriterError(str(exc)) from exc

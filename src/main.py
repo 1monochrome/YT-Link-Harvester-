@@ -3,42 +3,48 @@ import os
 import sys
 
 from src.logger import setup_logger
-from src.youtube.channel_parser import extract_handle
-from src.youtube.rss_fetcher import get_channel_id, fetch_latest_videos
+from src.downloader import get_direct_download_link
 from src.services.txt_writer import write_videos
-from src.exceptions import YoutubeFetcherError
+from src.services.json_writer import write_json
+from src.exceptions import YoutubeHarvesterError
+from src.config import TXT_OUTPUT_FILE, JSON_OUTPUT_FILE
 
 setup_logger()
-
 logger = logging.getLogger(__name__)
 
 
 def main():
     try:
-        channel_url = os.getenv("CHANNEL_URL")
+        target_url = os.getenv("TARGET_URL")
 
-        if not channel_url:
-            raise ValueError("CHANNEL_URL environment variable is missing.")
+        if not target_url:
+            raise ValueError("TARGET_URL environment variable is missing.")
 
-        logger.info("Processing channel: %s", channel_url)
+        logger.info("Processing URL: %s", target_url)
 
-        handle = extract_handle(channel_url)
-        logger.info("Extracted handle: %s", handle)
+        data = get_direct_download_link(target_url)
 
-        channel_id = get_channel_id(handle)
-        logger.info("Resolved channel ID: %s", channel_id)
+        from src.models import Video
+        video = Video(
+            title=data["title"],
+            video_id=data["video_id"],
+            webpage_url=data["webpage_url"],
+            direct_url=data["direct_url"],
+            duration=data["duration"],
+            uploader=data["uploader"],
+        )
 
-        videos = fetch_latest_videos(channel_id)
-        logger.info("Fetched %d videos", len(videos))
+        videos = [video]
 
-        write_videos(videos)
+        write_json(videos, JSON_OUTPUT_FILE)
+        write_videos(videos, TXT_OUTPUT_FILE)
 
-        logger.info("Process completed successfully.")
+        logger.info("Done.")
+        logger.info("Direct URL: %s", data["direct_url"])
 
-    except YoutubeFetcherError as error:
+    except YoutubeHarvesterError as error:
         logger.exception("Application error: %s", error)
         sys.exit(1)
-
     except Exception as error:
         logger.exception("Unexpected error: %s", error)
         sys.exit(1)
