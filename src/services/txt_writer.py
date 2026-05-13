@@ -1,23 +1,24 @@
 import os
+import logging
+from src.config import OUTPUT_DIR
+from src.exceptions import OutputWriteError
 
-from src.exceptions import WriterError
-from src.utils import ensure_output_dir
+logger = logging.getLogger(__name__)
 
 
-def write_videos(videos, output_file: str):
+def write_videos_txt(videos, filename="latest_videos.txt"):
     try:
-        ensure_output_dir(os.path.dirname(output_file))
-        with open(output_file, "w", encoding="utf-8") as f:
-            for idx, video in enumerate(videos, start=1):
-                f.write(f"{idx}. {video.title}\n")
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        path = os.path.join(OUTPUT_DIR, filename)
+
+        with open(path, "w", encoding="utf-8") as f:
+            for i, video in enumerate(videos, start=1):
+                f.write(f"{i}. {video.title}\n")
                 f.write(f"   Video ID: {video.video_id}\n")
-                f.write(f"   Page URL: {video.webpage_url}\n")
-                if video.direct_url:
-                    f.write(f"   Direct URL: {video.direct_url}\n")
-                if video.uploader:
-                    f.write(f"   Uploader: {video.uploader}\n")
-                if video.duration:
-                    f.write(f"   Duration: {video.duration} sec\n")
-                f.write("\n")
+                f.write(f"   URL: {video.url}\n\n")
+
+        return path
+
     except Exception as exc:
-        raise WriterError(str(exc)) from exc
+        logger.exception("Failed to write TXT output")
+        raise OutputWriteError(str(exc)) from exc
